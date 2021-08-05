@@ -1,0 +1,71 @@
+#!/bin/bash
+set -eo pipefail
+
+echo "Start deploy"
+
+  mv ../.elasticbeanstalk/config.apac-dev.yml ../.elasticbeanstalk/config.yml
+
+# Compress static files with gzip and brotli
+# https://blog.e-kursy.it/aws-lambda-edge-brotli/
+# https://medium.com/@felice.geracitano/brotli-compression-delivered-from-aws-7be5b467c2e1
+cd ../.nuxt/dist/
+find ./client -name '*.js' -o -name '*.json' -o -name '*.svg' -o -name '*.woff' -o -name '*.woff2' \
+ | xargs -n 1 -I {} sh -c 'mkdir -p ./gz/`dirname $1` && cp {} ./gz/{} && gzip --best ./gz/{} && mv ./gz/{}.gz ./gz/{}' sh {}
+find ./client -name '*.js' -o -name '*.json' -o -name '*.svg' -o -name '*.woff' -o -name '*.woff2' \
+ | xargs -n 1 -I {} sh -c 'mkdir -p ./br/`dirname $1` && cp {} ./br/{} && brotli --best ./br/{} && mv ./br/{}.br ./br/{}' sh {}
+cd ../..
+
+cd .storybook/
+find . \
+ -path './gz' -prune \
+ -o -path './br' -prune \
+ -o -name '*.js' -print \
+ -o -name '*.json' -print \
+ -o -name '*.svg' -print \
+ -o -name '*.woff' -print \
+ -o -name '*.woff2' -print \
+ | xargs -n 1 -I {} sh -c 'mkdir -p ./gz/`dirname $1` && gzip --best -c {} > ./gz/{}' sh {}
+find . \
+ -path './gz' -prune \
+ -o -path './br' -prune \
+ -o -name '*.js' -print \
+ -o -name '*.json' -print \
+ -o -name '*.svg' -print \
+ -o -name '*.woff' -print \
+ -o -name '*.woff2' -print \
+ | xargs -n 1 -I {} sh -c 'mkdir -p ./br/`dirname $1` && brotli --best -c {} > ./br/{}' sh {}
+cd ../
+
+aws s3 cp --recursive --cache-control 'public, max-age=31536000' .nuxt/dist/client s3://test-main-website-ohio/_nuxt/
+aws s3 cp --recursive --cache-control 'public, max-age=31536000' --content-encoding gzip .nuxt/dist/gz/client s3://test-main-website-ohio/gz/_nuxt/
+aws s3 cp --recursive --cache-control 'public, max-age=31536000' --content-encoding br .nuxt/dist/br/client s3://test-main-website-ohio/br/_nuxt/
+
+aws s3 cp --recursive --cache-control 'public, max-age=31536000' .storybook s3://test-main-website-ohio/storybook/
+aws s3 cp --recursive --cache-control 'public, max-age=31536000' --content-encoding gzip .storybook/gz s3://test-main-website-ohio/gz/storybook/
+aws s3 cp --recursive --cache-control 'public, max-age=31536000' --content-encoding br .storybook/br s3://test-main-website-ohio/br/storybook/
+
+rm -rf node_modules
+
+yarn --prod --frozen-lockfile
+
+source .env
+echo "Start deploy to Test-demo Environment"
+  eb deploy Molekulemain-env-1 --timeout 40
+
+
+invalidation=$(aws cloudfront create-invalidation --distribution-id $CACHE_CLOUDFRONT_ID --paths '/*')
+echo $invalidation;
+
+if [ "${CIRCLE_TAG}" = "test" ] || [ "${CIRCLE_TAG}" = "test-magento-anatta" ] || [ "${CIRCLE_TAG}" = "aurora-dev" ] || [ "${CIRCLE_TAG}" = "aurora-preprod" ] || [ "${CIRCLE_TAG}"= "aurora-qa" ]; then
+  # Wait for invlalidation to end so we can do E2E tests
+  id=$(echo $invalidation | jq -r '.Invalidation.Id')
+  echo "Waiting for invalidation $id"
+  aws cloudfront wait invalidation-completed --id $id --distribution-id $CACHE_CLOUDFRONT_ID
+fi
+
+
+Feedback
+English (US)
+© 2008 - 2021, Amazon Web Services, Inc. or its affiliates. All rights reserved.
+Privacy Policy
+Terms of Use
