@@ -1,0 +1,55 @@
+version: 0.2
+
+env:
+  variables:
+    NPM_ACCESS_TOKEN: "lkqeD6t9MhQukWN3UcsNufywpz98xWd14cdHMpd+/B0="
+    
+phases:
+  install:
+    runtime-versions:
+      nodejs: 12
+    commands:
+      - echo update npm...
+      - npm update -g npm
+      - echo node -v
+      - node -v
+      - echo npm -v
+      - npm -v
+      - echo install yarn...
+      - npm install -g yarn
+      - echo yarn -v
+      - yarn -v
+      - npm config set //npm.anatta.io/:_authToken IkqeD6t9MhQukWN3UcsNufywpz98xWd14cdHMpd+/B0=
+      - echo "installing Deployment Dependencies"
+      - apt-get update
+      - apt-get -y install rsync python-dev brotli jq dos2unix
+      - pip3 install -U pip setuptools twine
+      - pip3 install awscli==1.18.165 awsebcli==3.19.2 --use-feature=2020-resolver
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Compiling the Node.js code
+      - pwd
+      - cd .circleci
+      - dos2unix export-env-var.sh
+      - dos2unix deploy.sh
+      - chmod 777 export-env-var.sh
+      - ./export-env-var.sh
+      - mv .env ../
+      - ls -la
+      - cd ..
+      - ls -la
+      - pwd
+      - chmod 777 .circleci/deploy.sh
+      - chmod 777 .circleci/upload-source-maps.sh
+      - yarn
+      - yarn build
+      - yarn storybook:build
+      - ls -la
+      - ls -la  .nuxt/dist/client
+      - ls -la .storybook/
+      - zip -qr test-molekule-main-web.zip * -x ".elasticbeanstalk" "buildspec.yml"
+      - aws s3 cp test-molekule-main-web.zip s3://test-main-website-ohio/
+      - cd .circleci
+      - ./upload-source-maps.sh
+      - ./deploy.sh
