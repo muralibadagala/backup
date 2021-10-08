@@ -1,0 +1,174 @@
+def choice=[]
+
+node {
+	
+    choice = params["Environments"].split(",")
+	
+}
+pipeline {
+	agent any
+	stages {
+		stage("Git Checkout") {
+			steps {
+				git branch: '${branch}', credentialsId: 'Mohd', url: 'https://github.com/molekule-inc/molekule-main-website.git'
+			}
+		}
+        stage("Install NPM") {
+			steps {
+				sh '''
+				npm config set //npm.anatta.io/:_authToken IkqeD6t9MhQukWN3UcsNufywpz98xWd14cdHMpd+/B0=
+				'''
+			}
+		}
+		stage("Install Dependencies") {
+			steps {
+				sh '''
+				    node -v
+				    sudo apt-get update
+                    sudo apt-get -y install rsync python3-pip python-dev brotli jq python3-setuptools
+                    '''
+			}
+		}
+		stage("Install AWS CLI") {
+			steps {
+				sh '''
+                    pip3 install awscli==1.18.165
+                    pip install awsebcli --upgrade --user
+                    '''
+			}
+		}
+		stage("Deploy -Dev Uk-Dev") {
+		    when {
+                expression {
+                    'Dev' in choice
+                }
+            }
+		
+			steps {
+				sh '''#!/bin/bash
+				set -e
+				IFS=, read -ra REGIONS <<< $Region
+				
+				for REGION in "${REGIONS[@]}"
+					do
+					    sudo rm -rf node-modules/
+                        cd .circleci
+                        chmod 777 export-env-var.sh
+                        chmod 777 deploy.sh
+                        chmod 777 upload-source-maps.sh
+                        ./export-env-var.sh  
+                        mv .env ../
+                        cd ..
+                        yarn
+				        yarn build
+				        yarn storybook:build
+				        zip -qr test-molekule-main-web.zip *
+                        aws s3 cp test-molekule-main-web.zip s3://test-main-website-ohio/
+                        cd .circleci
+                        ./upload-source-maps.sh
+                        ./deploy.sh
+                        done'''
+			}
+		}
+				stage("Deploy -QA NVirginia") {
+		    when {
+                expression {
+                    'QA' in choice
+                }
+            }
+		
+			steps {
+				sh '''#!/bin/bash
+				set -e
+				IFS=, read -ra REGIONS <<< $Region
+				
+				for REGION in "${REGIONS[@]}"
+					do
+					    echo ${region}
+				        sudo rm -rf node-modules/
+                        cd .circleci
+                        chmod 777 export-env-var.sh
+                        chmod 777 deploy.sh
+                        chmod 777 upload-source-maps.sh
+                        ./export-env-var.sh
+                        echo "----------------------------------"
+                        cat .env
+                        echo "----------------------------------"
+                    done'''
+			}
+		}
+				stage("Deploy - Preprod Ohio") {
+		    when {
+                expression {
+                    'Preprod' in choice
+                }
+            }
+		
+			steps {
+				sh '''#!/bin/bash
+				set -e
+				IFS=, read -ra REGIONS <<< $Region
+				
+				for REGION in "${REGIONS[@]}"
+					do
+					    sudo rm -rf node-modules/
+                        cd .circleci
+                        chmod 777 export-env-var.sh
+                        chmod 777 deploy.sh
+                        chmod 777 upload-source-maps.sh
+                        ./export-env-var.sh
+                        mv .env ../
+                        cd ..
+                        yarn
+				        yarn build
+				        yarn storybook:build
+				        zip -qr test-molekule-main-web.zip *
+                        aws s3 cp test-molekule-main-web.zip s3://test-main-website-ohio/
+                        cd .circleci
+                        ./upload-source-maps.sh
+                        ./deploy.sh
+                    done'''
+			}
+		}
+		stage("Deploy - Prod ") {
+			when {
+                expression {
+                    'Prod' in choice
+                }
+			}
+			steps {
+				sh '''#!/bin/bash
+				set -e
+				IFS=, read -ra REGIONS <<< $Region
+				
+				for REGION in "${REGIONS[@]}"
+					do
+					    echo ${region}
+				        sudo rm -rf node-modules/
+                        cd .circleci
+                        chmod 777 export-env-var.sh
+                        chmod 777 deploy.sh
+                        chmod 777 upload-source-maps.sh
+                        ./export-env-var.sh
+                        mv .env ../
+                        cd ..
+                        yarn
+				        yarn build
+				        yarn storybook:build
+				        zip -qr test-molekule-main-web.zip *
+                        aws s3 cp test-molekule-main-web.zip s3://test-main-website-ohio/
+                        cd .circleci
+                        ./upload-source-maps.sh
+                        ./deploy.sh
+                    done'''
+			}
+		}
+	}
+}
+
+
+####
+add Active Choices Reactive Parameters 
+For Environments grrovy Script: return ['Dev', 'QA', 'Preprod','Prod']
+For Region  Groovy Script: return ['us-east-1','us-east-2','ap-south-1']
+
