@@ -1,0 +1,162 @@
+AWSTemplateFormatVersion : 2010-09-09
+
+Parameters:
+
+  ENV:
+    Type: String
+    Description: Environment
+    Default: 'prod'
+
+Resources:
+
+    ANALYTICSPRODUCT:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: !Join ['_', [ 'ANALYTICS_PRODUCT' , !Ref ENV ]]
+        DisplayName: !Join ['_', [ 'ANALYTICS_PRODUCT' , !Ref ENV ]]
+
+    ANALYTICSCUSTOMER:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: !Join ['_', [ 'ANALYTICS_CUSTOMER' , !Ref ENV ]]
+        DisplayName: !Join ['_', [ 'ANALYTICS_CUSTOMER' , !Ref ENV ]]
+
+    ANALYTICSORDER:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: !Join ['_', [ 'ANALYTICS_ORDER' , !Ref ENV ]]
+        DisplayName: !Join ['_', [ 'ANALYTICS_ORDER' , !Ref ENV ]]
+
+    ANALYTICSSUBSCRIPTION:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: !Join ['_', [ 'ANALYTICS_SUBSCRIPTION' , !Ref ENV ]]
+        DisplayName: !Join ['_', [ 'ANALYTICS_SUBSCRIPTION' , !Ref ENV ]]
+
+    ANALYTICSACHPAID:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: !Join ['_', [ 'ANALYTICS_ACH_PAID' , !Ref ENV ]]
+        DisplayName: !Join ['_', [ 'ANALYTICS_ACH_PAID' , !Ref ENV ]]
+        
+    NETSUITEANALYTICSORDERSTATUS:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: !Join ['_', [ 'NETSUITE_ANALYTICS_ORDER_STATUS' , !Ref ENV ]]
+        DisplayName: !Join ['_', [ 'NETSUITE_ANALYTICS_ORDER_STATUS' , !Ref ENV ]]
+
+    EXCEPTION:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: !Join ['_', [ 'EXCEPTION' , !Ref ENV ]]
+        DisplayName: !Join ['_', [ 'EXCEPTION' , !Ref ENV ]]
+        
+   #########
+   SQS
+   ########
+   AWSTemplateFormatVersion : 2010-09-09
+
+Parameters:
+
+  ENV:
+    Type: String
+    Description: Environment
+    Default: 'prod'
+
+Resources:
+  CTGATEWAY:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'CT_GATEWAY' , !Ref ENV ]]
+      VisibilityTimeout: 30
+  CTPRODUCT:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'CT_PRODUCT' , !Ref ENV ]]
+      VisibilityTimeout: 30
+  CTNETSUITECUSTOMER:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'CT_NETSUITE_CUSTOMER' , !Ref ENV ]]
+      VisibilityTimeout: 30
+  NETSUITECUSTOMER:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'NETSUITE_CUSTOMER' , !Ref ENV ]]
+      VisibilityTimeout: 30
+  CTORDERVALIDATE:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'CT_ORDER_VALIDATE', !Ref ENV ]]
+      VisibilityTimeout: 30
+  SUBSCRIPTIONORDER:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'SUBSCRIPTION_ORDER' , !Ref ENV ]]
+      VisibilityTimeout: 1800
+  NETSUITEORDERREPROCESS:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'NETSUITE_ORDER_REPROCESS' , !Ref ENV ]]
+      VisibilityTimeout: 30
+  CTORDERSTATE:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'CT_ORDER_STATE' , !Ref ENV ]]
+      VisibilityTimeout: 30
+  CTORDERSHIPPED:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'CT_ORDER_SHIPPED' , !Ref ENV ]]
+      VisibilityTimeout: 30
+  INVOICEORDER:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'INVOICE_ORDER' , !Ref ENV ]]
+      VisibilityTimeout: 30
+  SUBSCRIPTIONPLAN:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'SUBSCRIPTION_PLAN' , !Ref ENV ]]
+      VisibilityTimeout: 30
+  SUBSCRIPTIONPLANUPDATE:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'SUBSCRIPTION_PLAN_UPDATE' , !Ref ENV ]]
+      VisibilityTimeout: 30
+  NETSUITEORDER:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'NETSUITE_ORDER' , !Ref ENV ]]
+      VisibilityTimeout: 30
+  EMAILTRIGGERCUSTOMER:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'EMAIL_TRIGGER_CUSTOMER' , !Ref ENV ]]
+      VisibilityTimeout: 30
+  EMAILTRIGGERCUSTOMERDELIVERYCONF:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'EMAIL_TRIGGER_CUSTOMER_DELIVERY_CONF' , !Ref ENV ]]
+      VisibilityTimeout: 30
+  EXCEPTION:
+    Type: AWS::SQS::Queue
+    Properties:
+      DelaySeconds: 0
+      QueueName: !Join ['_', [ 'EXCEPTION' , !Ref ENV ]]
+      VisibilityTimeout: 30
