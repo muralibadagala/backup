@@ -1,0 +1,433 @@
+def choice=[]
+
+node {
+	
+    choice = params["Environments"].split(",")
+	
+}
+
+pipeline {
+	agent any
+	
+	environment {
+
+		ACCOUNT_ID = '872164202264'
+		LAMBDA_ROLE = 'arn:aws:iam::872164202264:role/lambda-role'
+		GITHUB_SERVICE_FOLDER = 'account_customer_migration'
+		LAMBDA_NAME = 'account_customer_migration_env'
+		ALLOW_ORIGIN = '*'
+		
+		TRIGGER_SQS_ARN= 'arn:aws:sqs:REGION:872164202264:CT_NETSUITE_CUSTOMER_env'
+		
+		AWS_ARN = 'arn:aws:sns:REGION:872164202264'
+		AWS_URL = 'https://sqs.REGION.amazonaws.com/872164202264'
+		
+		CT_AUTH_URL_dev_ca_central_1 = 'auth.us-central1.gcp.commercetools.com'
+		CT_CLIENT_ID_dev_ca_central_1 = 'KWv8cEitMtB_AZYcnMRckN3l'
+		CT_CLIENT_SECRET_dev_ca_central_1 = 'O-c2EbzMM45GdV9Le-HMKTcvBumDXhik'
+		CT_SERVICE_URL_dev_ca_central_1 = 'api.us-central1.gcp.commercetools.com'
+		CT_PROJECT_KEY_dev_ca_central_1 = 'mo-dev'
+
+		
+		CT_AUTH_URL_dev_eu_central_1 = 'auth.us-central1.gcp.commercetools.com'
+		CT_CLIENT_ID_dev_eu_central_1 = 'KWv8cEitMtB_AZYcnMRckN3l'
+		CT_CLIENT_SECRET_dev_eu_central_1 = 'O-c2EbzMM45GdV9Le-HMKTcvBumDXhik'
+		CT_SERVICE_URL_dev_eu_central_1 = 'api.us-central1.gcp.commercetools.com'
+		CT_PROJECT_KEY_dev_eu_central_1 = 'mo-dev'
+		
+		
+		CT_AUTH_URL_qa_eu_central_1 = 'auth.europe-west1.gcp.commercetools.com'
+		CT_CLIENT_ID_qa_eu_central_1 = 'uWwTbPf6Km8VRAKqb4aBHhGJ'
+		CT_CLIENT_SECRET_qa_eu_central_1 = 'Nnehca9k5fG6QIu6QI37_KVquwxABkNj'
+		CT_SERVICE_URL_qa_eu_central_1 = 'api.europe-west1.gcp.commercetools.com'		
+		CT_PROJECT_KEY_qa_eu_central_1 = 'mo-dev-eu-1'		
+
+
+		CT_AUTH_URL_qa_ca_central_1 = 'auth.us-central1.gcp.commercetools.com'
+		CT_CLIENT_ID_qa_ca_central_1 = 'RuiYUQ3Qie2TRUt_Sawm7kp5'
+		CT_CLIENT_SECRET_qa_ca_central_1 = 'I1afja8fTWwhlhyOpcIHhCbGRuZ1nNro'
+		CT_SERVICE_URL_qa_ca_central_1 = 'api.us-central1.gcp.commercetools.com'		
+		CT_PROJECT_KEY_qa_ca_central_1 = 'mo-qa-1'	
+
+		
+		CT_AUTH_URL_preprod_eu_central_1 = 'auth.europe-west1.gcp.commercetools.com'
+		CT_CLIENT_ID_preprod_eu_central_1 = '6cNfadFrf_FXlQFU8QlqYjB1'
+		CT_CLIENT_SECRET_preprod_eu_central_1 = 'jCQARlKEkj9STlglifCHBx_DCJAK88ZY'
+		CT_SERVICE_URL_preprod_eu_central_1 = 'api.europe-west1.gcp.commercetools.com'	
+		CT_PROJECT_KEY_preprod_eu_central_1 = 'mo-preprod1-eu'
+	
+
+		CT_AUTH_URL_preprod_ca_central_1 = 'auth.us-central1.gcp.commercetools.com'
+		CT_CLIENT_ID_preprod_ca_central_1 = 'UK5gM89S8oiw-oVIjWA6cvfy'
+		CT_CLIENT_SECRET_preprod_ca_central_1 = 'gS5DHocS0HygEuj1OhTg1n9tVydxm_ly'
+		CT_SERVICE_URL_preprod_ca_central_1 = 'api.us-central1.gcp.commercetools.com'	
+		CT_PROJECT_KEY_preprod_ca_central_1 = 'mo-preprod-1'
+	
+		
+		
+		CT_AUTH_URL_prod_eu_central_1 = 'auth.europe-west1.gcp.commercetools.com'
+		CT_CLIENT_ID_prod_eu_central_1 = 's0jQggGERDQkvjV7sB-OyNG-'
+		CT_CLIENT_SECRET_prod_eu_central_1 = 'rR7evyE0SBx113-hH8V5L5_nvceEcxfH'
+		CT_SERVICE_URL_prod_eu_central_1 = 'api.europe-west1.gcp.commercetools.com'
+		CT_PROJECT_KEY_prod_eu_central_1 = 'mo-prod-eu'
+		
+		CT_AUTH_URL_prod_ca_central_1 = 'auth.us-central1.gcp.commercetools.com'
+		CT_CLIENT_ID_prod_ca_central_1 = 'W8-VfDpy-7hImrCHXsqElxpN'
+		CT_CLIENT_SECRET_prod_ca_central_1 = 'tPtMiBMEOM3kTAktkf_Y_DD8KhWvAl9k'
+		CT_SERVICE_URL_prod_ca_central_1 = 'api.us-central1.gcp.commercetools.com'
+		CT_PROJECT_KEY_prod_ca_central_1 = 'mo-prod-na'
+		
+		ALIAS = 'env'
+				
+		EXCEPTION_SNS = 'EXCEPTION_env'
+		LOG_MODE = 'DEBUG'
+		NETSUITE_CUSTOMER_SQS = 'NETSUITE_CUSTOMER_env'
+		
+
+	}
+	
+	
+	
+	stages {
+		stage("Git Checkout") {
+			steps {
+				git branch: 'release', credentialsId: 'Mohd', url: 'https://github.com/molekule-inc/project-aurora-ct-backend-netsuite-node-services.git'
+			}
+		}
+		stage("Install dependencies") {
+			steps {
+				sh '''cd ${GITHUB_SERVICE_FOLDER}
+                npm install --save-dev'''
+			}
+		}
+		stage("Static code analysis") {
+			steps {
+				sh '''cd ${GITHUB_SERVICE_FOLDER}
+                npm run lint'''
+			}
+		}
+		stage("Unittest") {
+			steps {
+			   sh '''cd ${GITHUB_SERVICE_FOLDER}
+                npm run test'''
+			}
+		}
+		stage("sonar-analysis") {
+            steps {
+                sh 'sonar-scanner -Dsonar.host.url=http://35.182.7.195:9000/ -Dsonar.login=admin -Dsonar.password=molekule@123 -Dsonar.projectKey=uk-project-aurora-ct-account-customer-migration -Dsonar.projectName=uk-project-aurora-Nodejs-ct-account-customer-migration -Dsonar.sources=${GITHUB_SERVICE_FOLDER} -Dsonar.exclusions=${GITHUB_SERVICE_FOLDER}/test/unit/** -Dsonar.javascript.lcov.reportPaths=${GITHUB_SERVICE_FOLDER}/coverage/lcov.info -Dsonar.branch.name=release'
+            }
+        }
+		stage("Run Package") {
+			steps {
+				sh '''cd ${GITHUB_SERVICE_FOLDER}
+                      npm run package'''
+			}
+		} 
+
+	stage("AWS-Lambda-deploy/update to DEV") {
+		when {
+                expression {
+                    'Dev' in choice
+                }
+            }
+			steps {
+			    sh '''#!/bin/bash
+				
+				LAMBDA_NAME=${LAMBDA_NAME/env/dev}
+				ALIAS=${ALIAS/env/dev}
+				EXCEPTION_SNS=${EXCEPTION_SNS/env/dev}
+				NETSUITE_CUSTOMER_SQS=${NETSUITE_CUSTOMER_SQS/env/dev}
+				
+
+				LAMBDA_ROLE=${LAMBDA_ROLE}
+				
+				IFS=, read -ra REGIONS <<< $Region			
+				
+				for AWS_MOLEKULE_REGION in "${REGIONS[@]}"
+					do
+					CT_AUTH_URL=$(echo "CT_AUTH_URL_dev_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_AUTH_URL=$(echo ${!CT_AUTH_URL})
+					CT_CLIENT_ID=$(echo "CT_CLIENT_ID_dev_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_CLIENT_ID=$(echo ${!CT_CLIENT_ID})
+					CT_CLIENT_SECRET=$(echo "CT_CLIENT_SECRET_dev_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_CLIENT_SECRET=$(echo ${!CT_CLIENT_SECRET})
+					CT_SERVICE_URL=$(echo "CT_SERVICE_URL_dev_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_SERVICE_URL=$(echo ${!CT_SERVICE_URL})
+					CT_PROJECT_KEY=$(echo "CT_PROJECT_KEY_dev_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_PROJECT_KEY=$(echo ${!CT_PROJECT_KEY})					
+					TRIGGER_SQS_ARN=${TRIGGER_SQS_ARN/env/dev}
+					TRIGGER_SQS_ARN=${TRIGGER_SQS_ARN/REGION/$AWS_MOLEKULE_REGION}
+					
+					AWS_ARN=${AWS_ARN/REGION/$AWS_MOLEKULE_REGION}
+					AWS_URL=${AWS_URL/REGION/$AWS_MOLEKULE_REGION}	
+					
+					
+					value=`aws lambda list-functions --region ${AWS_MOLEKULE_REGION} --query 'Functions[].FunctionName' |grep ${LAMBDA_NAME} |wc -l`
+					echo $value
+
+					if [ $value == 1 ];
+					then
+						echo "function exist so updating"
+						aws lambda update-function-configuration --region ${AWS_MOLEKULE_REGION} --function-name  ${LAMBDA_NAME} --environment Variables="{ALIAS=${ALIAS},ALLOW_ORIGIN=*,AWS_ARN=${AWS_ARN},AWS_MOLEKULE_REGION=${AWS_MOLEKULE_REGION},AWS_URL=${AWS_URL},CT_AUTH_URL=${CT_AUTH_URL},CT_CLIENT_ID=${CT_CLIENT_ID},CT_CLIENT_SECRET=${CT_CLIENT_SECRET},CT_PROJECT_KEY=${CT_PROJECT_KEY},CT_SERVICE_URL=${CT_SERVICE_URL},EXCEPTION_SNS=${EXCEPTION_SNS},LOG_MODE=DEBUG,NETSUITE_CUSTOMER_SQS=${NETSUITE_CUSTOMER_SQS}}"
+						aws lambda update-function-code --region ${AWS_MOLEKULE_REGION} --function-name  ${LAMBDA_NAME} --zip-file fileb://${GITHUB_SERVICE_FOLDER}/${GITHUB_SERVICE_FOLDER}.zip
+						VERSION=$(aws lambda publish-version --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} | jq -r .Version)
+						
+						aws lambda put-function-event-invoke-config --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME}:${VERSION} --maximum-retry-attempts 0
+						
+						aws lambda update-alias --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} --name ${ALIAS} --function-version $VERSION
+
+					else
+						echo "function not found creating new"
+						aws lambda create-function --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} --timeout 10 --memory-size 128 --zip-file fileb://${GITHUB_SERVICE_FOLDER}/${GITHUB_SERVICE_FOLDER}.zip --handler src/function/index.handler --runtime nodejs14.x --role ${LAMBDA_ROLE} --environment Variables="{ALIAS=${ALIAS},ALLOW_ORIGIN=*,AWS_ARN=${AWS_ARN},AWS_MOLEKULE_REGION=${AWS_MOLEKULE_REGION},AWS_URL=${AWS_URL},CT_AUTH_URL=${CT_AUTH_URL},CT_CLIENT_ID=${CT_CLIENT_ID},CT_CLIENT_SECRET=${CT_CLIENT_SECRET},CT_PROJECT_KEY=${CT_PROJECT_KEY},CT_SERVICE_URL=${CT_SERVICE_URL},EXCEPTION_SNS=${EXCEPTION_SNS},LOG_MODE=DEBUG,NETSUITE_CUSTOMER_SQS=${NETSUITE_CUSTOMER_SQS}}"
+						VERSION=$(aws lambda publish-version --region ${AWS_MOLEKULE_REGION}  --function-name ${LAMBDA_NAME} | jq -r .Version)
+						
+						aws lambda put-function-event-invoke-config --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME}:${VERSION} --maximum-retry-attempts 0
+						
+						echo "Creating ALIAS"
+						ALIAS_ARN=$(aws lambda create-alias --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} --name ${ALIAS} --function-version $VERSION | jq -r .AliasArn)
+
+						
+						aws lambda create-event-source-mapping --region ${AWS_MOLEKULE_REGION} --function-name $ALIAS_ARN --batch-size 1 --event-source-arn ${TRIGGER_SQS_ARN}
+        
+					fi
+					
+					done'''
+					}
+		}    
+
+		
+
+		
+		stage("AWS-Lambda-deploy/update to QA") {
+		when {
+                expression {
+                    'QA' in choice
+                }
+            }
+			steps {
+			    sh '''#!/bin/bash
+				
+				LAMBDA_NAME=${LAMBDA_NAME/env/qa}
+				ALIAS=${ALIAS/env/qa}
+				EXCEPTION_SNS=${EXCEPTION_SNS/env/qa}
+				NETSUITE_CUSTOMER_SQS=${NETSUITE_CUSTOMER_SQS/env/qa}
+				
+
+				LAMBDA_ROLE=${LAMBDA_ROLE}
+				
+				IFS=, read -ra REGIONS <<< $Region			
+				
+				for AWS_MOLEKULE_REGION in "${REGIONS[@]}"
+					do
+					CT_AUTH_URL=$(echo "CT_AUTH_URL_qa_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_AUTH_URL=$(echo ${!CT_AUTH_URL})
+					CT_CLIENT_ID=$(echo "CT_CLIENT_ID_qa_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_CLIENT_ID=$(echo ${!CT_CLIENT_ID})
+					CT_CLIENT_SECRET=$(echo "CT_CLIENT_SECRET_qa_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_CLIENT_SECRET=$(echo ${!CT_CLIENT_SECRET})
+					CT_SERVICE_URL=$(echo "CT_SERVICE_URL_qa_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_SERVICE_URL=$(echo ${!CT_SERVICE_URL})
+					CT_PROJECT_KEY=$(echo "CT_PROJECT_KEY_qa_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_PROJECT_KEY=$(echo ${!CT_PROJECT_KEY})					
+					TRIGGER_SQS_ARN=${TRIGGER_SQS_ARN/env/qa}
+					TRIGGER_SQS_ARN=${TRIGGER_SQS_ARN/REGION/$AWS_MOLEKULE_REGION}
+
+
+					AWS_ARN=${AWS_ARN/REGION/$AWS_MOLEKULE_REGION}
+					AWS_URL=${AWS_URL/REGION/$AWS_MOLEKULE_REGION}	
+					
+					
+					value=`aws lambda list-functions --region ${AWS_MOLEKULE_REGION} --query 'Functions[].FunctionName' |grep ${LAMBDA_NAME} |wc -l`
+					echo $value
+
+					if [ $value == 1 ];
+					then
+						echo "function exist so updating"
+						aws lambda update-function-configuration --region ${AWS_MOLEKULE_REGION} --function-name  ${LAMBDA_NAME} --environment Variables="{ALIAS=${ALIAS},ALLOW_ORIGIN=*,AWS_ARN=${AWS_ARN},AWS_MOLEKULE_REGION=${AWS_MOLEKULE_REGION},AWS_URL=${AWS_URL},CT_AUTH_URL=${CT_AUTH_URL},CT_CLIENT_ID=${CT_CLIENT_ID},CT_CLIENT_SECRET=${CT_CLIENT_SECRET},CT_PROJECT_KEY=${CT_PROJECT_KEY},CT_SERVICE_URL=${CT_SERVICE_URL},EXCEPTION_SNS=${EXCEPTION_SNS},LOG_MODE=DEBUG,NETSUITE_CUSTOMER_SQS=${NETSUITE_CUSTOMER_SQS}}"
+						aws lambda update-function-code --region ${AWS_MOLEKULE_REGION} --function-name  ${LAMBDA_NAME} --zip-file fileb://${GITHUB_SERVICE_FOLDER}/${GITHUB_SERVICE_FOLDER}.zip
+						VERSION=$(aws lambda publish-version --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} | jq -r .Version)
+						
+						aws lambda put-function-event-invoke-config --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME}:${VERSION} --maximum-retry-attempts 0
+						
+						aws lambda update-alias --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} --name ${ALIAS} --function-version $VERSION
+
+					else
+						echo "function not found creating new"
+						aws lambda create-function --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} --timeout 10 --memory-size 128 --zip-file fileb://${GITHUB_SERVICE_FOLDER}/${GITHUB_SERVICE_FOLDER}.zip --handler src/function/index.handler --runtime nodejs14.x --role ${LAMBDA_ROLE} --environment Variables="{ALIAS=${ALIAS},ALLOW_ORIGIN=*,AWS_ARN=${AWS_ARN},AWS_MOLEKULE_REGION=${AWS_MOLEKULE_REGION},AWS_URL=${AWS_URL},CT_AUTH_URL=${CT_AUTH_URL},CT_CLIENT_ID=${CT_CLIENT_ID},CT_CLIENT_SECRET=${CT_CLIENT_SECRET},CT_PROJECT_KEY=${CT_PROJECT_KEY},CT_SERVICE_URL=${CT_SERVICE_URL},EXCEPTION_SNS=${EXCEPTION_SNS},LOG_MODE=DEBUG,NETSUITE_CUSTOMER_SQS=${NETSUITE_CUSTOMER_SQS}}"
+						VERSION=$(aws lambda publish-version --region ${AWS_MOLEKULE_REGION}  --function-name ${LAMBDA_NAME} | jq -r .Version)
+						
+						aws lambda put-function-event-invoke-config --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME}:${VERSION} --maximum-retry-attempts 0
+						
+						echo "Creating ALIAS"
+						ALIAS_ARN=$(aws lambda create-alias --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} --name ${ALIAS} --function-version $VERSION | jq -r .AliasArn)
+
+						
+						aws lambda create-event-source-mapping --region ${AWS_MOLEKULE_REGION} --function-name $ALIAS_ARN --batch-size 1 --event-source-arn ${TRIGGER_SQS_ARN}
+        
+					fi
+					
+					done'''
+					}
+		}    
+
+				
+		
+	
+		stage("AWS-Lambda-deploy/update to Preprod") {
+		when {
+                expression {
+                    'Preprod' in choice
+                }
+            }
+			steps {
+			    sh '''#!/bin/bash
+				
+				LAMBDA_NAME=${LAMBDA_NAME/env/preprod}
+				ALIAS=${ALIAS/env/preprod}
+				EXCEPTION_SNS=${EXCEPTION_SNS/env/preprod}
+				NETSUITE_CUSTOMER_SQS=${NETSUITE_CUSTOMER_SQS/env/preprod}
+				
+
+				LAMBDA_ROLE=${LAMBDA_ROLE}
+				
+				IFS=, read -ra REGIONS <<< $Region			
+				
+				for AWS_MOLEKULE_REGION in "${REGIONS[@]}"
+					do
+					CT_AUTH_URL=$(echo "CT_AUTH_URL_preprod_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_AUTH_URL=$(echo ${!CT_AUTH_URL})
+					CT_CLIENT_ID=$(echo "CT_CLIENT_ID_preprod_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_CLIENT_ID=$(echo ${!CT_CLIENT_ID})
+					CT_CLIENT_SECRET=$(echo "CT_CLIENT_SECRET_preprod_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_CLIENT_SECRET=$(echo ${!CT_CLIENT_SECRET})
+					CT_SERVICE_URL=$(echo "CT_SERVICE_URL_preprod_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_SERVICE_URL=$(echo ${!CT_SERVICE_URL})
+					CT_PROJECT_KEY=$(echo "CT_PROJECT_KEY_preprod_region" | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_PROJECT_KEY=$(echo ${!CT_PROJECT_KEY})					
+					TRIGGER_SQS_ARN=${TRIGGER_SQS_ARN/env/preprod}
+					TRIGGER_SQS_ARN=${TRIGGER_SQS_ARN/REGION/$AWS_MOLEKULE_REGION}
+					echo 'TRIGGER_SQS_ARN'
+					echo "${TRIGGER_SQS_ARN}"
+
+					AWS_ARN=${AWS_ARN/REGION/$AWS_MOLEKULE_REGION}
+					AWS_URL=${AWS_URL/REGION/$AWS_MOLEKULE_REGION}	
+					
+					
+					value=`aws lambda list-functions --region ${AWS_MOLEKULE_REGION} --query 'Functions[].FunctionName' |grep ${LAMBDA_NAME} |wc -l`
+					echo $value
+
+					if [ $value == 1 ];
+					then
+						echo "function exist so updating"
+						aws lambda update-function-configuration --region ${AWS_MOLEKULE_REGION} --function-name  ${LAMBDA_NAME} --environment Variables="{ALIAS=${ALIAS},ALLOW_ORIGIN=*,AWS_ARN=${AWS_ARN},AWS_MOLEKULE_REGION=${AWS_MOLEKULE_REGION},AWS_URL=${AWS_URL},CT_AUTH_URL=${CT_AUTH_URL},CT_CLIENT_ID=${CT_CLIENT_ID},CT_CLIENT_SECRET=${CT_CLIENT_SECRET},CT_PROJECT_KEY=${CT_PROJECT_KEY},CT_SERVICE_URL=${CT_SERVICE_URL},EXCEPTION_SNS=${EXCEPTION_SNS},LOG_MODE=DEBUG,NETSUITE_CUSTOMER_SQS=${NETSUITE_CUSTOMER_SQS}}"
+						aws lambda update-function-code --region ${AWS_MOLEKULE_REGION} --function-name  ${LAMBDA_NAME} --zip-file fileb://${GITHUB_SERVICE_FOLDER}/${GITHUB_SERVICE_FOLDER}.zip
+						VERSION=$(aws lambda publish-version --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} | jq -r .Version)
+						
+						aws lambda put-function-event-invoke-config --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME}:${VERSION} --maximum-retry-attempts 0
+						
+						aws lambda update-alias --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} --name ${ALIAS} --function-version $VERSION
+
+					else
+						echo "function not found creating new"
+						aws lambda create-function --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} --timeout 10 --memory-size 128 --zip-file fileb://${GITHUB_SERVICE_FOLDER}/${GITHUB_SERVICE_FOLDER}.zip --handler src/function/index.handler --runtime nodejs14.x --role ${LAMBDA_ROLE} --environment Variables="{ALIAS=${ALIAS},ALLOW_ORIGIN=*,AWS_ARN=${AWS_ARN},AWS_MOLEKULE_REGION=${AWS_MOLEKULE_REGION},AWS_URL=${AWS_URL},CT_AUTH_URL=${CT_AUTH_URL},CT_CLIENT_ID=${CT_CLIENT_ID},CT_CLIENT_SECRET=${CT_CLIENT_SECRET},CT_PROJECT_KEY=${CT_PROJECT_KEY},CT_SERVICE_URL=${CT_SERVICE_URL},EXCEPTION_SNS=${EXCEPTION_SNS},LOG_MODE=DEBUG,NETSUITE_CUSTOMER_SQS=${NETSUITE_CUSTOMER_SQS}}"
+						VERSION=$(aws lambda publish-version --region ${AWS_MOLEKULE_REGION}  --function-name ${LAMBDA_NAME} | jq -r .Version)
+						
+						aws lambda put-function-event-invoke-config --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME}:${VERSION} --maximum-retry-attempts 0
+						
+						echo "Creating ALIAS"
+						ALIAS_ARN=$(aws lambda create-alias --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} --name ${ALIAS} --function-version $VERSION | jq -r .AliasArn)
+
+						
+						aws lambda create-event-source-mapping --region ${AWS_MOLEKULE_REGION} --function-name $ALIAS_ARN --batch-size 1 --event-source-arn ${TRIGGER_SQS_ARN}
+        
+					fi
+					
+					done'''
+					}
+		}    
+
+		
+		
+		
+				stage("AWS-Lambda-deploy/update to Prod") {
+		when {
+                expression {
+                    'Prod' in choice
+                }
+            }
+			steps {
+			    sh '''#!/bin/bash
+				
+				LAMBDA_NAME=${LAMBDA_NAME/env/prod}
+				ALIAS=${ALIAS/env/prod}
+				EXCEPTION_SNS=${EXCEPTION_SNS/env/prod}
+				NETSUITE_CUSTOMER_SQS=${NETSUITE_CUSTOMER_SQS/env/prod}
+				
+
+				LAMBDA_ROLE=${LAMBDA_ROLE}
+				LOG_MODE=${LOG_MODE/DEBUG/INFO}
+				
+				IFS=, read -ra REGIONS <<< $Region			
+				
+				for AWS_MOLEKULE_REGION in "${REGIONS[@]}"
+					do
+					echo 'CT_AUTH_URL : Assignment Start'
+					CT_AUTH_URL=$(echo 'CT_AUTH_URL_prod_region' | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					echo ${CT_AUTH_URL}
+					CT_AUTH_URL=$(echo ${!CT_AUTH_URL})
+					echo ${CT_AUTH_URL} 
+					CT_CLIENT_ID=$(echo 'CT_CLIENT_ID_prod_region' | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_CLIENT_ID=$(echo ${!CT_CLIENT_ID})
+					CT_CLIENT_SECRET=$(echo 'CT_CLIENT_SECRET_prod_region' | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_CLIENT_SECRET=$(echo ${!CT_CLIENT_SECRET})
+					CT_SERVICE_URL=$(echo 'CT_SERVICE_URL_prod_region' | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_SERVICE_URL=$(echo ${!CT_SERVICE_URL})
+					CT_PROJECT_KEY=$(echo 'CT_PROJECT_KEY_prod_region' | sed -e "s/region/${AWS_MOLEKULE_REGION}/g" | sed -e "s/-/_/g")
+					CT_PROJECT_KEY=$(echo ${!CT_PROJECT_KEY})					
+					TRIGGER_SQS_ARN=${TRIGGER_SQS_ARN/env/prod}
+					TRIGGER_SQS_ARN=${TRIGGER_SQS_ARN/REGION/$AWS_MOLEKULE_REGION}
+					echo 'TRIGGER_SQS_ARN'
+					echo "${TRIGGER_SQS_ARN}"
+
+					AWS_ARN=${AWS_ARN/REGION/$AWS_MOLEKULE_REGION}
+					AWS_URL=${AWS_URL/REGION/$AWS_MOLEKULE_REGION}	
+					
+					
+					value=`aws lambda list-functions --region ${AWS_MOLEKULE_REGION} --query 'Functions[].FunctionName' |grep ${LAMBDA_NAME} |wc -l`
+					echo $value
+
+					if [ $value == 1 ];
+					then
+						echo "function exist so updating"
+						aws lambda update-function-configuration --region ${AWS_MOLEKULE_REGION} --function-name  ${LAMBDA_NAME} --environment Variables="{ALIAS=${ALIAS},ALLOW_ORIGIN=*,AWS_ARN=${AWS_ARN},AWS_MOLEKULE_REGION=${AWS_MOLEKULE_REGION},AWS_URL=${AWS_URL},CT_AUTH_URL=${CT_AUTH_URL},CT_CLIENT_ID=${CT_CLIENT_ID},CT_CLIENT_SECRET=${CT_CLIENT_SECRET},CT_PROJECT_KEY=${CT_PROJECT_KEY},CT_SERVICE_URL=${CT_SERVICE_URL},EXCEPTION_SNS=${EXCEPTION_SNS},LOG_MODE=DEBUG,NETSUITE_CUSTOMER_SQS=${NETSUITE_CUSTOMER_SQS}}"
+						aws lambda update-function-code --region ${AWS_MOLEKULE_REGION} --function-name  ${LAMBDA_NAME} --zip-file fileb://${GITHUB_SERVICE_FOLDER}/${GITHUB_SERVICE_FOLDER}.zip
+						VERSION=$(aws lambda publish-version --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} | jq -r .Version)
+						aws lambda put-function-event-invoke-config --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME}:${VERSION} --maximum-retry-attempts 0
+						aws lambda update-alias --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} --name ${ALIAS} --function-version $VERSION
+
+					else
+						echo "function not found creating new"
+						aws lambda create-function --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} --timeout 10 --memory-size 128 --zip-file fileb://${GITHUB_SERVICE_FOLDER}/${GITHUB_SERVICE_FOLDER}.zip --handler src/function/index.handler --runtime nodejs14.x --role ${LAMBDA_ROLE} --environment Variables="{ALIAS=${ALIAS},ALLOW_ORIGIN=*,AWS_ARN=${AWS_ARN},AWS_MOLEKULE_REGION=${AWS_MOLEKULE_REGION},AWS_URL=${AWS_URL},CT_AUTH_URL=${CT_AUTH_URL},CT_CLIENT_ID=${CT_CLIENT_ID},CT_CLIENT_SECRET=${CT_CLIENT_SECRET},CT_PROJECT_KEY=${CT_PROJECT_KEY},CT_SERVICE_URL=${CT_SERVICE_URL},EXCEPTION_SNS=${EXCEPTION_SNS},LOG_MODE=DEBUG,NETSUITE_CUSTOMER_SQS=${NETSUITE_CUSTOMER_SQS}}"
+						VERSION=$(aws lambda publish-version --region ${AWS_MOLEKULE_REGION}  --function-name ${LAMBDA_NAME} | jq -r .Version)
+						
+						aws lambda put-function-event-invoke-config --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME}:${VERSION} --maximum-retry-attempts 0
+						
+						echo "Creating ALIAS"
+						ALIAS_ARN=$(aws lambda create-alias --region ${AWS_MOLEKULE_REGION} --function-name ${LAMBDA_NAME} --name ${ALIAS} --function-version $VERSION | jq -r .AliasArn)
+
+						
+						
+						aws lambda create-event-source-mapping --region ${AWS_MOLEKULE_REGION} --function-name $ALIAS_ARN --batch-size 1 --event-source-arn ${TRIGGER_SQS_ARN}
+        
+					fi
+					
+					done'''
+					}
+		}    
+
+		
+		
+		
+		
+	}
+}
