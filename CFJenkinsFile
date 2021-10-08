@@ -1,0 +1,189 @@
+def choice=[]
+node {
+    choice = params["Environments"].split(",")
+}
+
+pipeline {
+    agent any;
+    
+    stages {
+        
+        
+	stage('Dev') {
+            when {
+                expression {
+                    'Dev' in choice
+                }
+            }
+        steps {
+               sh '''#!/bin/bash
+                   IFS=, read -ra array <<< $Region
+                                    for j in "${array[@]}"
+                                        do
+                                        echo "$j"
+                                        chmod +x create-or-update-stack.sh
+                                        ./create-or-update-stack.sh $j devops-bucket bucket_create.yaml bucket_create.json
+                                        aws s3 cp index.zip s3://molekule-devops-${j}/ecs-autoscale-lambda/
+                                         ./create-or-update-stack.sh $j cart-service-ecr-dev cart-service-ecr.yml ecr-cart-service-dev.json
+ 					./create-or-update-stack.sh $j order-service-ecr-dev cart-service-ecr.yml ecr-order-service-dev.json
+                                         ./create-or-update-stack.sh $j checkout-service-ecr-dev cart-service-ecr.yml ecr-checkout-service-dev.json
+                                         ./create-or-update-stack.sh $j csr-service-ecr-dev cart-service-ecr.yml ecr-csr-service-dev.json
+                                         ./create-or-update-stack.sh $j product-service-ecr-dev cart-service-ecr.yml ecr-product-service-dev.json
+                                         ./create-or-update-stack.sh $j useraccount-service-ecr-dev cart-service-ecr.yml ecr-useraccount-service-dev.json
+                                        
+ //                                       ./create-or-update-stack.sh $j ct-integration-services-dev backend-cluster-cf.yml backend-cluster-cf-dev-${j}.json
+                                        
+  //                                      ./create-or-update-stack.sh $j cart-service-dev backend-service-cf.yml backend-cart-service-dev-${j}.json
+ //					./create-or-update-stack.sh $j product-service-dev backend-service-cf.yml backend-product-service-dev-${j}.json
+ //					./create-or-update-stack.sh $j order-service-dev backend-service-cf.yml backend-order-service-dev-${j}.json
+ //					./create-or-update-stack.sh $j checkout-service-dev backend-service-cf.yml backend-checkout-service-dev-${j}.json
+ //					./create-or-update-stack.sh $j csr-service-dev backend-service-cf.yml backend-csr-service-dev-${j}.json
+ //					./create-or-update-stack.sh $j useraccount-service-dev backend-service-cf.yml backend-useraccount-service-dev-${j}.json
+	
+// 					./create-or-update-stack.sh $j lambda-sns-dev sns.yml lambda-infra-dev.json
+// 					./create-or-update-stack.sh $j lambda-sqs-dev sqs.yml lambda-infra-dev.json
+// 					./create-or-update-stack.sh $j lambda-dynamodb-dev dynamodb.yml lambda-infra-dev.json
+// 					./create-or-update-stack.sh $j lambda-s3-dev s3.yml s3-dev-${j}.json
+					
+						
+                                        done'''
+          }
+        }
+		
+	
+	    
+	     
+        stage('QA') {
+            when {
+                expression {
+                    'QA' in choice
+                }
+            }
+        steps {
+               sh '''#!/bin/bash
+                   IFS=, read -ra array <<< $Region
+                                    for j in "${array[@]}"
+                                        do
+                                        echo "$j"
+                                        chmod +x create-or-update-stack.sh
+                                         ./create-or-update-stack.sh $j devops-bucket bucket_create.yaml bucket_create.json
+                                         aws s3 cp index.zip s3://molekule-devops-${j}/ecs-autoscale-lambda/
+                                         ./create-or-update-stack.sh $j cart-service-ecr-qa cart-service-ecr.yml ecr-cart-service-qa.json
+ 					./create-or-update-stack.sh $j order-service-ecr-qa cart-service-ecr.yml ecr-order-service-qa.json
+                                         ./create-or-update-stack.sh $j checkout-service-ecr-qa cart-service-ecr.yml ecr-checkout-service-qa.json
+                                         ./create-or-update-stack.sh $j csr-service-ecr-qa cart-service-ecr.yml ecr-csr-service-qa.json
+                                         ./create-or-update-stack.sh $j product-service-ecr-qa cart-service-ecr.yml ecr-product-service-qa.json
+                                         ./create-or-update-stack.sh $j useraccount-service-ecr-qa cart-service-ecr.yml ecr-useraccount-service-qa.json
+                                        
+//                                         ./create-or-update-stack.sh $j ct-integration-services-qa backend-cluster-cf.yml backend-cluster-cf-qa-${j}.json
+                                        
+//                                         ./create-or-update-stack.sh $j cart-service-qa backend-service-cf.yml backend-cart-service-qa-${j}.json
+//                                         ./create-or-update-stack.sh $j order-service-qa backend-service-cf.yml backend-order-service-qa-${j}.json
+//                                         ./create-or-update-stack.sh $j checkout-service-qa backend-service-cf.yml backend-checkout-service-qa-${j}.json
+//                                         ./create-or-update-stack.sh $j csr-service-qa backend-service-cf.yml backend-csr-service-qa-${j}.json
+//                                         ./create-or-update-stack.sh $j product-service-qa backend-service-cf.yml backend-product-service-qa-${j}.json
+//                                         ./create-or-update-stack.sh $j useraccount-service-qa backend-service-cf.yml backend-useraccount-service-qa-${j}.json
+//										./create-or-update-stack.sh $j lambda-sns-qa sns.yml lambda-infra-qa.json
+//										./create-or-update-stack.sh $j lambda-sqs-qa sqs.yml lambda-infra-qa.json
+//										./create-or-update-stack.sh $j lambda-dynamodb-qa dynamodb.yml lambda-infra-qa.json
+//										./create-or-update-stack.sh $j lambda-s3-qa s3.yml s3-qa-${j}.json
+										
+                                        done'''
+          }
+        }
+        
+	    
+	    
+	    
+	    
+        stage('Preprod') {
+            when {
+                expression {
+                    'Preprod' in choice
+                }
+            }
+        steps {
+               sh '''#!/bin/bash
+                   IFS=, read -ra array <<< $Region
+                                    for j in "${array[@]}"
+                                        do
+                                        echo "$j"
+                                         chmod +x create-or-update-stack.sh
+//                                         ./create-or-update-stack.sh $j devops-bucket bucket_create.yaml bucket_create.json
+//                                         aws s3 cp index.zip s3://molekule-devops-${j}/ecs-autoscale-lambda/
+//                                         ./create-or-update-stack.sh $j cart-service-ecr cart-service-ecr.yml ecr-cart-service-preprod-${j}.json
+// 					./create-or-update-stack.sh $j order-service-ecr cart-service-ecr.yml ecr-order-service-preprod-${j}.json
+//                                         ./create-or-update-stack.sh $j checkout-service-ecr cart-service-ecr.yml ecr-checkout-service-preprod-${j}.json
+//                                         ./create-or-update-stack.sh $j csr-service-ecr cart-service-ecr.yml ecr-csr-service-preprod-${j}.json
+//                                         ./create-or-update-stack.sh $j product-service-ecr cart-service-ecr.yml ecr-product-service-preprod-${j}.json
+//                                         ./create-or-update-stack.sh $j useraccount-service-ecr cart-service-ecr.yml ecr-useraccount-service-preprod-${j}.json
+                                        
+//                                         ./create-or-update-stack.sh $j ct-integration-services-preprod backend-cluster-cf.yml backend-cluster-cf-preprod-${j}.json
+                                        
+//                                         ./create-or-update-stack.sh $j cart-service-preprod backend-service-cf.yml backend-cart-service-preprod-${j}.json
+// 					./create-or-update-stack.sh $j order-service-preprod backend-service-cf.yml backend-order-service-preprod-${j}.json
+// 					./create-or-update-stack.sh $j checkout-service-preprod backend-service-cf.yml backend-checkout-service-preprod-${j}.json
+// 					./create-or-update-stack.sh $j csr-service-preprod backend-service-cf.yml backend-csr-service-preprod-${j}.json
+// 					./create-or-update-stack.sh $j product-service-preprod backend-service-cf.yml backend-product-service-preprod-${j}.json
+// 					./create-or-update-stack.sh $j useraccount-service-preprod backend-service-cf.yml backend-useraccount-service-preprod-${j}.json
+					
+ //					./create-or-update-stack.sh $j lambda-sns-preprod sns.yml lambda-infra-preprod.json
+// 					./create-or-update-stack.sh $j lambda-sqs-preprod sqs.yml lambda-infra-preprod.json
+ 					./create-or-update-stack.sh $j lambda-dynamodb-preprod dynamodb.yml lambda-infra-preprod.json
+					./create-or-update-stack.sh $j lambda-s3-preprod s3.yml s3-preprod-${j}.json
+					
+					
+                                        done'''
+          }
+        }
+        
+        
+	    
+	  stage('Prod') {
+            when {
+                expression {
+                    'Prod' in choice
+                }
+            }
+        steps {
+               sh '''#!/bin/bash
+                   IFS=, read -ra array <<< $Region
+                                    for j in "${array[@]}"
+                                        do
+                                        echo "$j"
+                                         chmod +x create-or-update-stack.sh
+                                          ./create-or-update-stack.sh $j devops-bucket bucket_create.yaml bucket_create.json
+                                          aws s3 cp index.zip s3://molekule-devops-${j}/ecs-autoscale-lambda/
+//                                           ./create-or-update-stack.sh $j cart-service-ecr-prod cart-service-ecr.yml ecr-cart-service-prod.json
+//   					  ./create-or-update-stack.sh $j order-service-ecr-prod cart-service-ecr.yml ecr-order-service-prod.json
+//                                           ./create-or-update-stack.sh $j checkout-service-ecr-prod cart-service-ecr.yml ecr-checkout-service-prod.json
+//                                           ./create-or-update-stack.sh $j csr-service-ecr-prod cart-service-ecr.yml ecr-csr-service-prod.json
+//                                           ./create-or-update-stack.sh $j product-service-ecr-prod cart-service-ecr.yml ecr-product-service-prod.json
+//                                          ./create-or-update-stack.sh $j useraccount-service-ecr-prod cart-service-ecr.yml ecr-useraccount-service-prod.json
+                                        
+//                                          ./create-or-update-stack.sh $j ct-integration-services-prod backend-cluster-cf.yml backend-cluster-cf-prod-${j}.json
+                                        
+//                                         ./create-or-update-stack.sh $j cart-service-prod backend-service-cf.yml backend-cart-service-prod-${j}.json
+//  					./create-or-update-stack.sh $j order-service-prod backend-service-cf.yml backend-order-service-prod-${j}.json
+//  					./create-or-update-stack.sh $j checkout-service-prod backend-service-cf.yml backend-checkout-service-prod-${j}.json
+//  					./create-or-update-stack.sh $j csr-service-prod backend-service-cf.yml backend-csr-service-prod-${j}.json
+//  					./create-or-update-stack.sh $j product-service-prod backend-service-cf.yml backend-product-service-prod-${j}.json
+// 					./create-or-update-stack.sh $j useraccount-service-prod backend-service-cf.yml backend-useraccount-service-prod-${j}.json
+					
+					
+//					./create-or-update-stack.sh $j lambda-sns-prod sns.yml lambda-infra-prod.json
+//					./create-or-update-stack.sh $j lambda-sqs-prod sqs.yml lambda-infra-prod.json
+					./create-or-update-stack.sh $j lambda-dynamodb-prod dynamodb.yml lambda-infra-prod.json
+					./create-or-update-stack.sh $j lambda-s3-prod s3.yml s3-prod-${j}.json
+					
+					echo "Completed"
+                                        done'''
+					
+          }
+        }
+	
+		    
+        
+        
+    }
+}
