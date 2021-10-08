@@ -1,0 +1,261 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  ServiceName:
+    Type: String
+    Default: demo-cart-service-1
+    Description: A name for the service
+  ClusterStackName:
+    Type: String
+    Default: Backend-Demo
+    Description: A name of the cluster creation stack
+  DesiredCount:
+    Type: Number
+    Default: 0
+    Description: How many copies of the service task to run
+  ENV:
+    Type: String
+    Description: >
+      environment
+    Default: 'dev'
+  ECSCluster:
+    Type: String
+    Description: >
+      Specifies the ECS Cluster Name with which the resources would be
+      associated
+    Default: 'Backend-Demo-Cluster'
+  EcsAmiId:
+    Type: String
+    Description: Specifies the AMI ID for your container instances.
+    Default: ami-052574757c1e41fa6
+  ImageUrl:
+    Type: String
+    Default: '872164202264.dkr.ecr.ca-central-1.amazonaws.com/cart_services_preprod:31'
+    Description: The url of a docker image that contains the application process that
+                 will handle the traffic for this service
+  ContainerPort:
+    Type: Number
+    Default: 8052
+    Description: What port number the application inside the docker container is binding to
+  ContainerCpu:
+    Type: Number
+    Default: 256
+    Description: How much CPU to give the container. 1024 is 1 CPU
+  ContainerMemory:
+    Type: Number
+    Default: 512
+    Description: How much memory in megabytes to give the container
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the ECS instances.
+    Default: segregation-servers
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: Select a VPC that allows instances access to the Internet.
+    Default: vpc-016e917e3ea0cee73
+  SubnetId:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Select at least two subnets in your selected VPC.
+    Default: subnet-081f0872f29cd6d56,subnet-0f90b002da608c246
+  SecurityGroupsParam:
+    Type: 'List<AWS::EC2::SecurityGroup::Id>'
+    Description: The list of SecurityGroupIds in your Virtual Private Cloud (VPC)
+    Default: sg-00ad3b91c13cef7a1
+  DesiredCapacity:
+    Type: Number
+    Default: '1'
+    Description: Number of instances to launch in your ECS cluster.
+  MaxSize:
+    Type: Number
+    Default: '4'
+    Description: Maximum number of instances that can be launched in your ECS cluster.
+  InstanceType:
+    Description: EC2 instance type
+    Type: String
+    Default: t2.medium
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m3.medium
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - c4.large
+      - c4.xlarge
+      - c4.2xlarge
+      - c4.4xlarge
+      - c4.8xlarge
+      - c3.large
+      - c3.xlarge
+      - c3.2xlarge
+      - c3.4xlarge
+      - c3.8xlarge
+      - r3.large
+      - r3.xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i2.xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+    ConstraintDescription: Please choose a valid instance type.
+  LoadBalancerCertArn:
+    Type: CommaDelimitedList
+    Default: 'arn:aws:acm:ca-central-1:872164202264:certificate/e3442233-27af-4552-9984-1c856f44aaed'
+    Description: ARN of Certs
+  LoadBalancerSslPolicy:
+    Description: LoadBalancerSslPolicy
+    Type: String
+    Default: ELBSecurityPolicy-2016-08
+  MinContainers:
+    Description: MinContainers
+    Type: Number
+    Default: 0
+  LoadBalancerPort:
+    Description: LoadBalancerPort
+    Type: Number
+    Default: 443
+  AutoScalingTargetValue:
+    Description: AutoScalingTargetValue
+    Type: Number
+    Default: 10
+  MaxContainers:
+    Description: MaxContainers
+    Type: Number
+    Default: 10
+Resources:
+  taskdefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Join ['', [!Ref 'AWS::StackName', '-', !Ref ENV]]
+      Cpu: !Ref 'ContainerCpu'
+      Memory: !Ref 'ContainerMemory'
+      TaskRoleArn: !ImportValue Backend-Demo-TaskRoleArn
+      ContainerDefinitions:
+        - Name: !Join ['', [!Ref 'AWS::StackName', '-', !Ref ENV]]
+          Cpu: !Ref 'ContainerCpu'
+          Memory: !Ref 'ContainerMemory'
+          Image: !Ref 'ImageUrl'
+          PortMappings:
+            - ContainerPort: !Ref 'ContainerPort'
+
+  ECSALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Join ['', [!Ref 'AWS::StackName', '-', !Ref ENV]]
+      Scheme: internet-facing
+      LoadBalancerAttributes:
+      - Key: idle_timeout.timeout_seconds
+        Value: '60'
+      Subnets: !Ref 'SubnetId'
+      SecurityGroups: !Ref SecurityGroupsParam
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn: !Ref 'ECSTG'
+      LoadBalancerArn: !Ref 'ECSALB'
+      Port: '80'
+      Protocol: HTTP
+  ALBListener1:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn: !Ref 'ECSTG'
+      LoadBalancerArn: !Ref 'ECSALB'
+      Port: '443'
+      Protocol: HTTPS
+      Certificates: !Ref LoadBalancerCertArn
+      SslPolicy: !Ref LoadBalancerSslPolicy
+  ECSALBListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    DependsOn: ALBListener
+    Properties:
+      Actions:
+      - Type: forward
+        TargetGroupArn: !Ref 'ECSTG'
+      Conditions:
+      - Field: path-pattern
+        Values: [/]
+      ListenerArn: !Ref 'ALBListener'
+      Priority: 1
+  ECSALBListenerRule1:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    DependsOn: ALBListener1
+    Properties:
+      Actions:
+      - Type: forward
+        TargetGroupArn: !Ref 'ECSTG'
+      Conditions:
+      - Field: path-pattern
+        Values: [/]
+      ListenerArn: !Ref 'ALBListener1'
+      Priority: 1
+  ECSTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: ECSALB
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 15
+      HealthCheckTimeoutSeconds: 15
+      HealthyThresholdCount: 2
+      Name: !Join ['', [!Ref 'AWS::StackName', '-', !Ref ENV]]
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref 'VpcId'
+  service:
+    Type: AWS::ECS::Service
+    DependsOn: ALBListener
+    Properties:
+      ServiceName: !Join ['', [!Ref 'AWS::StackName', '-', !Ref ENV]]
+      Cluster: !ImportValue Backend-Demo-ecscluster
+      DesiredCount: !Ref 'DesiredCount'
+      LoadBalancers:
+      - ContainerName: !Join ['', [!Ref 'AWS::StackName', '-', !Ref ENV]]
+        ContainerPort: !Ref 'ContainerPort'
+        TargetGroupArn: !Ref 'ECSTG'
+      Role: !ImportValue Backend-Demo-ECSServiceRoleArn
+      TaskDefinition: !Ref 'taskdefinition'
+  ServiceScalingTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: service
+    Properties:
+      MaxCapacity: 2
+      MinCapacity: 1
+      ResourceId: !Join ['', [service/, !ImportValue Backend-Demo-ecscluster, /, !GetAtt [service, Name]]]
+      RoleARN: !ImportValue Backend-Demo-AutoscalingRoleArn
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+  ServiceScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: AStepPolicy
+      PolicyType: StepScaling
+      ScalingTargetId: !Ref 'ServiceScalingTarget'
+      StepScalingPolicyConfiguration:
+        AdjustmentType: PercentChangeInCapacity
+        Cooldown: 60
+        MetricAggregationType: Average
+        StepAdjustments:
+        - MetricIntervalLowerBound: 0
+          ScalingAdjustment: 200
+Outputs:
+  ecsservice:
+    Value: !Ref 'service'
+  ECSALB:
+    Description: Your ALB DNS URL
+    Value: !Join ['', [!GetAtt [ECSALB, DNSName]]]
+  taskdef:
+    Value: !Ref 'taskdefinition'
